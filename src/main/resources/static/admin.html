@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Админ — записи</title>
+
+  <!-- Базовый адрес API (если фронт и бэк на одном хосте — можно оставить пустым '') -->
+  <script>window.BOHO_API_BASE = 'http://localhost:8080';</script>
+
+  <!-- Хелперы авторизации: подстановка токена, редирект при его отсутствии -->
+  <script>
+    (function () {
+      const token = localStorage.getItem('boho_token');
+      if (!token) location.replace('login.html');
+
+      // fetch с автоматическим добавлением Bearer-токена и BASE
+      window.bohoAuthFetch = function (url, options = {}) {
+        const base = (window.BOHO_API_BASE || '');
+        const fullUrl = /^https?:\/\//i.test(url) ? url : (base + url);
+
+        options.method = options.method || 'GET';
+        options.headers = options.headers || {};
+        const t = localStorage.getItem('boho_token');
+        if (t) options.headers['Authorization'] = 'Bearer ' + t;
+
+        return fetch(fullUrl, options);
+      };
+
+      // logout
+      window.bohoLogout = async function () {
+        try { await bohoAuthFetch('/api/logout', { method: 'POST' }); } catch (_){}
+        localStorage.removeItem('boho_token');
+        location.replace('login.html');
+      };
+    })();
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Lato:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+
+  <style>
+    body{background:#f4efe6}
+    .admin-wrap{max-width:1100px;margin:40px auto;padding:0 16px}
+    h1{font-family:"Playfair Display",serif;margin:0 0 16px}
+    .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+    .btn{padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
+    .btn:hover{background:#fafafa}
+    .btn-danger{background:#c62828;color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer}
+    .btn-danger:hover{background:#b71c1c}
+    .muted{color:#666}
+    .table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+    .table th,.table td{padding:10px 12px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+    .table th{background:#fafafa;font-weight:700}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#666}
+    .badge{display:inline-block;padding:2px 6px;border-radius:10px;background:#f3f3f3}
+    .table-wrap{background:#fff;border-radius:12px;overflow:hidden}
+  </style>
+</head>
+<body>
+<div class="admin-wrap">
+  <h1>Записи (админ)</h1>
+
+  <div class="toolbar">
+    <button id="reload" class="btn">Обновить</button>
+    <span id="status" class="muted"></span>
+    <a href="/" class="btn" style="margin-left:auto">← На сайт</a>
+    <button class="btn" onclick="bohoLogout()">Выйти</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table" id="grid">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Услуга</th>
+        <th>Начало (лок.)</th>
+        <th>Окончание (лок.)</th>
+        <th>Клиент</th>
+        <th>Телефон</th>
+        <th>Комментарий</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody id="rows">
+      <tr><td colspan="8" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const rows = document.getElementById('rows');
+    const statusEl = document.getElementById('status');
+    const reloadBtn = document.getElementById('reload');
+
+    function utcToLocal(iso){
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d)) return iso;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    }
+
+    async function load(){
+      rows.innerHTML = `<tr><td colspan="8" class="muted">Загрузка…</td></tr>`;
+      statusEl.textContent = '';
+      try {
+        const res = await bohoAuthFetch('/api/admin/appointments');
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('boho_token');
+            location.replace('login.html');
+            return;
+          }
+          throw new Error('Ошибка загрузки (' + res.status + ')');
+        }
+
+        const data = await res.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          rows.innerHTML = `<tr><td colspan="8" class="muted">Нет записей</td></tr>`;
+          return;
+        }
+
+        rows.innerHTML = '';
+        for (const a of data) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="mono">#${a.id}</span></td>
+            <td><span class="badge">${a.serviceName ?? ''}</span><div class="mono">svc:${a.serviceId ?? ''}</div></td>
+            <td>${utcToLocal(a.startAt)}</td>
+            <td>${utcToLocal(a.endAt)}</td>
+            <td>${a.customerName ?? ''}</td>
+            <td>${a.customerPhone ?? ''}</td>
+            <td>${a.comment ?? ''}</td>
+            <td><button class="btn-danger" data-id="${a.id}">Удалить</button></td>
+          `;
+          rows.appendChild(tr);
+        }
+      } catch (e) {
+        console.error(e);
+        rows.innerHTML = `<tr><td colspan="8" class="muted">Ошибка загрузки: ${e.message}</td></tr>`;
+        statusEl.textContent = String(e);
+      }
+    }
+
+    async function remove(id){
+      if(!confirm(`Удалить запись #${id}?`)) return;
+      const res = await bohoAuthFetch(`/api/admin/appointments/${id}`, { method:'DELETE' });
+      if (res.status === 401) {
+        localStorage.removeItem('boho_token');
+        location.replace('login.html');
+        return;
+      }
+      if (res.ok) {
+        await load();
+      } else {
+        const txt = await res.text().catch(()=> '');
+        alert(`Не удалось удалить (#${res.status}): ${txt}`);
+      }
+    }
+
+    rows.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button.btn-danger');
+      if(!btn) return;
+      remove(btn.dataset.id);
+    });
+
+    reloadBtn.addEventListener('click', load);
+    load();
+  })();
+</script>
+</body>
+</html>

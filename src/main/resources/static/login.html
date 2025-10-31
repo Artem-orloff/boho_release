@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Вход — Boho Admin</title>
+  <style>
+    body {font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0;}
+    form {width:320px; display:flex; flex-direction:column; gap:12px; padding:24px; border:1px solid #ddd; border-radius:12px;}
+    input,button {padding:10px 12px; font-size:16px;}
+    button {cursor:pointer}
+    .err{color:#c00; min-height:1.2em}
+  </style>
+  <script>window.BOHO_API_BASE = window.BOHO_API_BASE || '';</script>
+</head>
+<body>
+<form id="loginForm">
+  <h2>Админ-панель</h2>
+  <input id="username" type="text" placeholder="Логин" required value="admin">
+  <input id="password" type="password" placeholder="Пароль" required>
+  <button type="submit">Войти</button>
+  <div class="err" id="err"></div>
+</form>
+
+<script>
+  const api = (window.BOHO_API_BASE || '') + '/api/login';
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    const res = await fetch(api, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('boho_token', data.token);
+      location.href = 'admin.html';
+    } else {
+      document.getElementById('err').textContent = 'Неверный логин или пароль';
+    }
+  });
+</script>
+</body>
+</html>

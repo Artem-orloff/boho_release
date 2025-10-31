@@ -1,0 +1,14 @@
+### создать запись
+POST http://localhost:8080/api/bookings
+Content-Type: application/json
+
+{
+  "serviceId": 1,
+  "startAtUtc": "2025-10-27T10:00:00Z",
+  "customerName": "Artem",
+  "customerPhone": "+49 000 000",
+  "comment": "тест через IDEA"
+}
+
+### проверить записи на день (UTC)
+GET http://localhost:8080/api/appointments?date=2025-10-27
