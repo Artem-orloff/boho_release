@@ -593,7 +593,16 @@
     const toast = document.querySelector('.toast');
     function showToast(msg){ toast.textContent=msg; toast.hidden=false; toast.classList.add('visible'); setTimeout(()=>{ toast.classList.remove('visible'); setTimeout(()=>toast.hidden=true,220); }, 2000); }
 
-    async function apiGET(url){ const r=await fetch(url); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+    async function apiGET(url){
+  const r = await fetch(url);
+  if (!r.ok) {
+    const txt = await r.text().catch(()=> '');
+    throw new Error(`HTTP ${r.status}: ${txt.slice(0,200)}`);
+  }
+  const ct = (r.headers.get('content-type') || '').toLowerCase();
+  if (r.status === 204 || !ct.includes('application/json')) return null;
+  return r.json();
+}
     async function apiPOST(url, body, headers={}) {
       const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json', ...headers}, body:JSON.stringify(body) });
       const t = await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch{}
@@ -680,7 +689,7 @@
     // ===== загрузка длительностей =====
     async function loadDurations(serviceId){
       durSel.innerHTML='<option>Загрузка…</option>';
-      const list = await apiGET(`${API}/api/services/${serviceId}/durations`);
+      const list = await apiGET(`${API}/api/services-durations?serviceId=${serviceId}`);
       durSel.innerHTML='';
       list.forEach(d=>{
         const opt = new Option(
