@@ -1,37 +1,34 @@
 package com.example.boho_v10.controller;
 
-import com.example.boho_v10.service.AppointmentService;
+import com.example.boho_v10.dto.BusySlotDto;
+import com.example.boho_v10.repository.AppointmentRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/api")
 public class AvailabilityController {
 
-    private final AppointmentService appointmentService;
+    private final AppointmentRepository apptRepo;
 
-    public AvailabilityController(AppointmentService appointmentService) {
-        this.appointmentService = appointmentService;
+    public AvailabilityController(AppointmentRepository apptRepo) {
+        this.apptRepo = apptRepo;
     }
 
-    @GetMapping("/api/slots/busy")
-    public List<Map<String, OffsetDateTime>> getBusy(@RequestParam Long serviceId,
-                                                     @RequestParam String date) {
-        LocalDate day = LocalDate.parse(date);
-
-        List<Map<String, OffsetDateTime>> result = appointmentService.busyForDay(serviceId, day).stream()
-                .map(a -> Map.of(
-                        "start", a.getStartAt(),
-                        "end",   a.getEndAt()
-                ))
-                .collect(Collectors.toList());
-
-        // Разворачиваем список вручную, так как .reversed() нет в Java 17 для Stream
-        java.util.Collections.reverse(result);
-        return result;
+    @GetMapping("/slots/busy")
+    public List<BusySlotDto> busyForDay(@RequestParam Long serviceId,
+                                        @RequestParam LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        return apptRepo.findDayByService(serviceId, start, end)
+                .stream()
+                .map(a -> new BusySlotDto(a.getStartTime(), a.getEndTime()))
+                .toList();
     }
 }
+
+
+

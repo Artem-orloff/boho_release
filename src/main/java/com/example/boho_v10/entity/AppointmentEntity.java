@@ -1,7 +1,7 @@
 package com.example.boho_v10.entity;
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "appointments")
@@ -11,62 +11,46 @@ public class AppointmentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // FK как числовые поля — просто и стабильно
     @Column(name = "service_id", nullable = false)
     private Long serviceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", insertable = false, updatable = false)
-    private ServiceEntity service; // читать можно, писать — через serviceId
+    @Column(name = "service_duration_id", nullable = false)
+    private Long serviceDurationId;
 
-
-    public Long getServiceId() { return serviceId; }
-    public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
-
-
-    @Column(name = "start_at", nullable = false)
-    private OffsetDateTime startAt;
-    @Column(name = "duration_min", nullable = false)
-    private Integer durationMin;
-
-    public Integer getDurationMin() { return durationMin; }
-    public void setDurationMin(Integer durationMin) { this.durationMin = durationMin; }
-
-
-    // end_at считает триггер БД → не пишем со стороны приложения
-    @Column(name = "end_at", insertable = false, updatable = false)
-    private OffsetDateTime endAt;
-
-    @Column(name = "customer_name")
+    @Column(name = "customer_name", nullable = false, length = 255)
     private String customerName;
 
-    @Column(name = "customer_phone")
+    @Column(name = "customer_phone", nullable = false, length = 32)
     private String customerPhone;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalDateTime endTime;
+
+    @Column(name = "status", nullable = false, length = 32)
+    private String status = "booked";
 
     @Column(name = "comment")
     private String comment;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    @Column(name = "created_at", insertable = false, updatable = false,
+            columnDefinition = "timestamp default current_timestamp")
+    private LocalDateTime createdAt;
 
-    public AppointmentEntity() {
-        if (this.startAt != null) {
-            this.endAt = this.startAt.plusMinutes(durationMin);
-        }
-    }
+    public AppointmentEntity() {}
 
-
-    // getters/setters
+    // --- getters/setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public ServiceEntity getService() { return service; }
-    public void setService(ServiceEntity service) { this.service = service; }
+    public Long getServiceId() { return serviceId; }
+    public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
 
-    public OffsetDateTime getStartAt() { return startAt; }
-    public void setStartAt(OffsetDateTime startAt) { this.startAt = startAt; }
-
-    public OffsetDateTime getEndAt() { return endAt; }
-    public void setEndAt(OffsetDateTime endAt) { this.endAt = endAt; }
+    public Long getServiceDurationId() { return serviceDurationId; }
+    public void setServiceDurationId(Long serviceDurationId) { this.serviceDurationId = serviceDurationId; }
 
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
@@ -74,9 +58,21 @@ public class AppointmentEntity {
     public String getCustomerPhone() { return customerPhone; }
     public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
 
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
 
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
+
+
+

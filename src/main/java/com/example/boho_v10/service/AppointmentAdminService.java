@@ -4,44 +4,56 @@ import com.example.boho_v10.dto.AppointmentAdminDto;
 import com.example.boho_v10.entity.AppointmentEntity;
 import com.example.boho_v10.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class AppointmentAdminService {
 
-    private final AppointmentRepository repo;
+    private final AppointmentRepository repository;
 
-    public AppointmentAdminService(AppointmentRepository repo) {
-        this.repo = repo;
+    public AppointmentAdminService(AppointmentRepository repository) {
+        this.repository = repository;
     }
 
-    @Transactional(readOnly = true)
+    // === метод, который просит контроллер ===
+    public List<AppointmentAdminDto> findAllByOrderByStartTimeDesc() {
+        return repository.findAllByOrderByStartTimeDesc()
+                .stream().map(this::toDto).toList();
+    }
+
+    // алиасы на всякий случай (если где-то остались старые вызовы)
+    public List<AppointmentAdminDto> findAllByOrderByStartAtDesc() {
+        return findAllByOrderByStartTimeDesc();
+    }
     public List<AppointmentAdminDto> listAll() {
-        return repo.findAllByOrderByStartAtDesc().stream()
-                .map(this::toDto)
-                .toList();
+        return findAllByOrderByStartTimeDesc();
     }
 
-
-    @Transactional
-    public void deleteById(Long id) {
-        if (!repo.existsById(id)) throw new IllegalArgumentException("Appointment not found: " + id);
-        repo.deleteById(id);
+    public List<AppointmentAdminDto> getForDateUTC(LocalDate dateUtc) {
+        LocalDateTime start = dateUtc.atStartOfDay();
+        LocalDateTime end   = start.plusDays(1);
+        return repository.findByDateRange(start, end)
+                .stream().map(this::toDto).toList();
     }
+
+    public void deleteById(Long id) { repository.deleteById(id); }
 
     private AppointmentAdminDto toDto(AppointmentEntity a) {
         return new AppointmentAdminDto(
                 a.getId(),
-                a.getService().getId(),
-                a.getService().getName(),
-                a.getStartAt(),
-                a.getEndAt(),
+                a.getServiceId(),
+                a.getServiceDurationId(),
                 a.getCustomerName(),
                 a.getCustomerPhone(),
-                a.getComment(),
-                a.getDurationMin()   // ← добавили
+                a.getStartTime(),
+                a.getEndTime(),
+                a.getStatus()
         );
     }
 }
+
+
+

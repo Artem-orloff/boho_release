@@ -27,10 +27,7 @@ public class AdminAppointmentController {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
-    // Небольшая обработка 404 без глобального advice (на время)
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> notFound(IllegalArgumentException ex) {
-        return ResponseEntity.status(404).body(ex.getMessage());
-    }
 }
+
+
+

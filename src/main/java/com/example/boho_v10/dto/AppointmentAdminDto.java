@@ -1,15 +1,15 @@
 package com.example.boho_v10.dto;
 
 import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 public record AppointmentAdminDto(
         Long id,
         Long serviceId,
-        String serviceName,
-        OffsetDateTime startAt,   // UTC
-        OffsetDateTime endAt,     // UTC
+        Long serviceDurationId,
         String customerName,
         String customerPhone,
-        String comment,
-        Integer durationMin
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        String status
 ) {}

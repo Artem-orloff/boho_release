@@ -1,9 +1,8 @@
+// AppointmentController.java (админский, если он про списки)
 package com.example.boho_v10.controller;
 
-import com.example.boho_v10.dto.AppointmentCreateRequest;
-import com.example.boho_v10.entity.AppointmentEntity;
-import com.example.boho_v10.service.AppointmentService;
-import jakarta.validation.Valid;
+import com.example.boho_v10.dto.AppointmentAdminDto;
+import com.example.boho_v10.service.AppointmentAdminService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,26 +11,26 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/appointments")
+@RequestMapping("/api/admin/appointments")
 public class AppointmentController {
 
-    private final AppointmentService service;
+    private final AppointmentAdminService service;
 
-    public AppointmentController(AppointmentService service) {
+    public AppointmentController(AppointmentAdminService service) {
         this.service = service;
     }
 
-    @PostMapping
-    public ResponseEntity<AppointmentEntity> create(@Valid @RequestBody AppointmentCreateRequest req) {
-        AppointmentEntity created = service.create(req);
-        return ResponseEntity.ok(created);
+    @GetMapping("/all")
+    public ResponseEntity<List<AppointmentAdminDto>> allDesc() {
+        return ResponseEntity.ok(service.findAllByOrderByStartTimeDesc());
     }
 
-    // Список записей на конкретный день (ожидаем дату в UTC, формат YYYY-MM-DD)
-    @GetMapping
-    public ResponseEntity<List<AppointmentEntity>> byDate(
-            @RequestParam("date")
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateUtc) {
+    @GetMapping("/by-date")
+    public ResponseEntity<List<AppointmentAdminDto>> byDate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateUtc) {
         return ResponseEntity.ok(service.getForDateUTC(dateUtc));
     }
 }
+
+
+
