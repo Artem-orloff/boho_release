@@ -3,6 +3,7 @@ package com.example.boho_v10.repository;
 import com.example.boho_v10.entity.AppointmentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,14 +22,19 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
 
     // Для AvailabilityController: занятость за день по услуге
     @Query("""
-         select a from AppointmentEntity a
-          where a.serviceId = :serviceId
-            and a.status = 'booked'
-            and a.startTime >= :dayStart
-            and a.startTime <  :dayEnd
-          order by a.startTime asc
-         """)
-    List<AppointmentEntity> findDayByService(Long serviceId, LocalDateTime dayStart, LocalDateTime dayEnd);
+        select a from AppointmentEntity a
+         where a.serviceId = :serviceId
+           and a.status = 'booked'
+           and a.startTime >= :dayStart
+           and a.startTime <  :dayEnd
+         order by a.startTime asc
+    """)
+    List<AppointmentEntity> findDayByService(
+            @Param("serviceId") Long serviceId,
+            @Param("dayStart") LocalDateTime dayStart,
+            @Param("dayEnd")   LocalDateTime dayEnd
+    );
+
 
     // Для админ-списка: все брони по убыванию времени старта
     // (можно без @Query — это derived query по имени)
@@ -42,6 +48,7 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
          """)
     List<AppointmentEntity> findByDateRange(LocalDateTime start, LocalDateTime end);
 }
+
 
 
 

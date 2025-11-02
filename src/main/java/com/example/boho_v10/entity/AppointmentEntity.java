@@ -11,18 +11,11 @@ public class AppointmentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FK как числовые поля — просто и стабильно
-    @Column(name = "service_id", nullable = false)
-    private Long serviceId;
-
-    @Column(name = "service_duration_id", nullable = false)
+    @Column(name = "service_duration_id")
     private Long serviceDurationId;
 
-    @Column(name = "customer_name", nullable = false, length = 255)
-    private String customerName;
-
-    @Column(name = "customer_phone", nullable = false, length = 32)
-    private String customerPhone;
+    @Column(name = "service_id", nullable = false)
+    private Long serviceId;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
@@ -30,33 +23,37 @@ public class AppointmentEntity {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(name = "status", nullable = false, length = 32)
-    private String status = "booked";
+    @Column(name = "status", nullable = false)
+    private String status;
+
+    @Column(name = "customer_name")
+    private String customerName;
+
+    @Column(name = "customer_phone")
+    private String customerPhone;
 
     @Column(name = "comment")
     private String comment;
 
-    @Column(name = "created_at", insertable = false, updatable = false,
-            columnDefinition = "timestamp default current_timestamp")
+    @Column(name = "duration_min")
+    private Integer durationMin;
+
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public AppointmentEntity() {}
-
     // --- getters/setters ---
+
+    public Long getServiceDurationId(){ return serviceDurationId;}
+
+    public void setServiceDurationId(Long serviceDurationId) {
+        this.serviceDurationId = serviceDurationId;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public Long getServiceId() { return serviceId; }
     public void setServiceId(Long serviceId) { this.serviceId = serviceId; }
-
-    public Long getServiceDurationId() { return serviceDurationId; }
-    public void setServiceDurationId(Long serviceDurationId) { this.serviceDurationId = serviceDurationId; }
-
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
-
-    public String getCustomerPhone() { return customerPhone; }
-    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
 
     public LocalDateTime getStartTime() { return startTime; }
     public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
@@ -67,8 +64,17 @@ public class AppointmentEntity {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public String getCustomerPhone() { return customerPhone; }
+    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
+
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
+
+    public Integer getDurationMin() { return durationMin; }
+    public void setDurationMin(Integer durationMin) { this.durationMin = durationMin; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
