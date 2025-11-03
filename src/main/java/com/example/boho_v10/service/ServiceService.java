@@ -46,12 +46,22 @@ public class ServiceService {
     }
 
     // --- длительности ---
-    public List<ServiceDurationDto> getDurations(Long serviceId) {
-        return durationRepo.findByService_IdOrderBySortOrderAscDurationMinAsc(serviceId)
+    public List<ServiceDurationDto> getDurations(long serviceId) {
+        if (!serviceRepo.existsById(serviceId)) {
+            throw new IllegalArgumentException("Service not found: " + serviceId);
+        }
+        return durationRepo
+                .findByService_IdOrderBySortOrderAscDurationMinAsc(serviceId)
                 .stream()
-                .map(ServiceService::toDto)
+                .map(d -> new ServiceDurationDto(
+                        d.getId(),
+                        d.getDurationMin(),
+                        d.getPriceCents(),
+                        d.getSortOrder()
+                ))
                 .toList();
     }
+
 
     private static ServiceDurationDto toDto(ServiceDurationEntity d) {
         return new ServiceDurationDto(

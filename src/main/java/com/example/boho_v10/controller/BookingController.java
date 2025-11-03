@@ -10,16 +10,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class BookingController {
 
-    private final AppointmentService appointmentService;
-    public BookingController(AppointmentService appointmentService) {
-        this.appointmentService = appointmentService;
-    }
+    private final AppointmentService service;
 
-    @PostMapping(value="/appointments", consumes="application/json", produces="application/json")
+    public BookingController(AppointmentService service) { this.service = service; }
+
+    @PostMapping("/appointments")
     public ResponseEntity<AppointmentResponse> create(@RequestBody AppointmentCreateRequest req) {
-        return ResponseEntity.ok(appointmentService.create(req));
+        return ResponseEntity.ok(service.create(req));
     }
 }
+
+
+
 
 
 

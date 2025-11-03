@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ServiceDurationRepository extends JpaRepository<ServiceDurationEntity, Long> {
-    List<ServiceDurationEntity> findByService_IdOrderBySortOrderAscDurationMinAsc(Long serviceId);
+    List<ServiceDurationEntity> findByService_IdOrderBySortOrderAscDurationMinAsc(Long service);
     Optional<ServiceDurationEntity> findByIdAndService_Id(Long id, Long serviceId);
     Optional<ServiceDurationEntity> findByIdAndService_IdAndService_ActiveTrue(Long id, Long serviceId);
 }

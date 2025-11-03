@@ -2,10 +2,11 @@ package com.example.boho_v10.entity;
 
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "services")
+@Table(name = "services") // ← как в БД
 public class ServiceEntity {
 
     @Id
@@ -24,17 +25,11 @@ public class ServiceEntity {
     @Column(name = "created_at", insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    // связь с длительностями
+    // теперь mappedBy совпадает с именем поля в дочке
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ServiceDurationEntity> durations;
+    private List<ServiceDurationEntity> durations = new ArrayList<>();
 
-    public ServiceEntity() {}
-
-    public ServiceEntity(String name) {
-        this.name = name;
-    }
-
-    // геттеры/сеттеры
+    // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -53,5 +48,6 @@ public class ServiceEntity {
     public List<ServiceDurationEntity> getDurations() { return durations; }
     public void setDurations(List<ServiceDurationEntity> durations) { this.durations = durations; }
 }
+
 
 

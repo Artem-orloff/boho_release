@@ -1,6 +1,8 @@
 package com.example.boho_v10.entity;
 
 import jakarta.persistence.*;
+
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,7 +41,7 @@ public class AppointmentEntity {
     private Integer durationMin;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private java.sql.Timestamp createdAt;
 
     // --- getters/setters ---
 
@@ -76,8 +78,8 @@ public class AppointmentEntity {
     public Integer getDurationMin() { return durationMin; }
     public void setDurationMin(Integer durationMin) { this.durationMin = durationMin; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 }
 
 

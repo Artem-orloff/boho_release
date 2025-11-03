@@ -288,25 +288,50 @@
   }
 
   // Отрисовка времени (учёт занятости + прошлого времени)
+  // Отрисовка времени (учёт занятости + прошлого времени)
   async function renderTimes(serviceId) {
     if (!timeSel || !dateI || !durSel) return;
     timeSel.innerHTML = '';
     if (!dateI.value || !durSel.value) return;
 
-    const busy = await apiGET(`${API_BASE}/api/slots/busy?serviceId=${serviceId}&date=${dateI.value}`) || [];
+    // 1) тянем занятость и нормализуем названия полей
+    const rawBusy = await apiGET(`${API_BASE}/api/slots/busy?serviceId=${serviceId}&date=${dateI.value}`) || [];
+    const busy = rawBusy
+      .map(b => ({
+        start: b.start ?? b.startTime ?? b.begin ?? b.from ?? null,
+        end:   b.end   ?? b.endTime   ?? b.finish ?? b.to   ?? null
+      }))
+      .filter(b => b.start && b.end);
+
+    // 2) лог на всякий случай (один раз на дату)
+    console.debug('[busy]', dateI.value, busy.slice(0, 5));
+
+    // 3) длительность из выбранной опции
     const minutes = Number(durSel.selectedOptions[0]?.dataset?.durationMin || 60);
 
+    // 4) сегодняшнее прошлое время — недоступно
     const now = new Date();
     const isToday = dateI.value === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
+    // 5) строим сетку
     const disabled = new Set();
     GRID.forEach(t => {
       const start = new Date(`${dateI.value}T${t}:00`);
       const end = new Date(start); end.setMinutes(end.getMinutes() + minutes);
+
       const past = isToday && end.getTime() <= now.getTime();
       const conflict = busy.some(b => overlaps(start, end, b.start, b.end));
-      const opt = new Option(t + (conflict ? ' — занято' : (past ? ' — прошло' : '')), t, false, false);
-      if (conflict || past) { opt.disabled = true; disabled.add(t); }
+
+      const opt = new Option(
+        t + (conflict ? ' — занято' : (past ? ' — прошло' : '')),
+        t,
+        false,
+        false
+      );
+      if (conflict || past) {
+        opt.disabled = true;
+        disabled.add(t);
+      }
       timeSel.appendChild(opt);
     });
 
@@ -314,6 +339,10 @@
     timeSel.value = firstFree || '';
     if (!firstFree) showToast('Свободных слотов на выбранную дату нет');
   }
+
+
+
+
 
   // Открытие формы из карточки
   document.body.addEventListener('click', async (e) => {

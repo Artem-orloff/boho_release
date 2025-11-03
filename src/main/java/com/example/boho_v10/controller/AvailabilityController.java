@@ -10,23 +10,28 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/slots")
 public class AvailabilityController {
 
     private final AppointmentRepository repo;
+
     public AvailabilityController(AppointmentRepository repo) { this.repo = repo; }
 
-    @GetMapping(value = "/slots/busy", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<BusySlotDto> busyForDay(@RequestParam Long serviceId,
-                                        @RequestParam LocalDate date) {
-        LocalDateTime start = date.atStartOfDay();
-        LocalDateTime end   = start.plusDays(1);
-        return repo.findDayByService(serviceId, start, end)
-                .stream()
+    @GetMapping("/busy")
+    public List<BusySlotDto> busy(@RequestParam Long serviceId,
+                                  @RequestParam java.time.LocalDate date) {
+        java.time.LocalDateTime from = date.atStartOfDay();
+        java.time.LocalDateTime to   = from.plusDays(1);
+        return repo.findDayByService(serviceId, from, to).stream()
                 .map(a -> new BusySlotDto(a.getStartTime(), a.getEndTime()))
                 .toList();
     }
 }
+
+
+
+
+
 
 
 

@@ -31,8 +31,8 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
     """)
     List<AppointmentEntity> findDayByService(
             @Param("serviceId") Long serviceId,
-            @Param("dayStart") LocalDateTime dayStart,
-            @Param("dayEnd")   LocalDateTime dayEnd
+            @Param("dayStart") LocalDateTime from,
+            @Param("dayEnd")   LocalDateTime to
     );
 
 

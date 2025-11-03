@@ -13,49 +13,60 @@ import java.time.LocalDateTime;
 @Service
 public class AppointmentService {
 
-    private final AppointmentRepository apptRepo;
+    private final AppointmentRepository repo;
     private final ServiceDurationRepository durationRepo;
 
-    public AppointmentService(AppointmentRepository apptRepo,
+    public AppointmentService(AppointmentRepository repo,
                               ServiceDurationRepository durationRepo) {
-        this.apptRepo = apptRepo;
+        this.repo = repo;
         this.durationRepo = durationRepo;
     }
 
     public AppointmentResponse create(AppointmentCreateRequest req) {
-        if (req == null) throw new IllegalArgumentException("empty request");
-
-        ServiceDurationEntity d = durationRepo
-                .findByIdAndService_IdAndService_ActiveTrue(req.serviceDurationId(), req.serviceId())
-                .orElseThrow(() -> new IllegalArgumentException("Неверная услуга/длительность"));
-
-        LocalDateTime start = parseStart(req.startLocal());
-        LocalDateTime end   = start.plusMinutes(d.getDurationMin());
-
-        if (apptRepo.existsByStatusBookedAndOverlap(start, end)) {
-            throw new IllegalStateException("Слот занят");
+        if (req == null || req.startLocal() == null || req.startLocal().isBlank()) {
+            throw new IllegalArgumentException("startLocal is required");
         }
+        if (req.serviceId() == null || req.serviceDurationId() == null) {
+            throw new IllegalArgumentException("serviceId and serviceDurationId are required");
+        }
+
+        LocalDateTime start = LocalDateTime.parse(req.startLocal());
+
+        ServiceDurationEntity dur = durationRepo.findById(req.serviceDurationId())
+                .orElseThrow(() -> new IllegalArgumentException("ServiceDuration not found: " + req.serviceDurationId()));
+
+        if (!dur.getService().getId().equals(req.serviceId())) {
+            throw new IllegalArgumentException("Duration doesn't belong to the given service");
+        }
+
+        int minutes = dur.getDurationMin();
+        LocalDateTime end = start.plusMinutes(minutes);
 
         AppointmentEntity a = new AppointmentEntity();
         a.setServiceId(req.serviceId());
         a.setServiceDurationId(req.serviceDurationId());
-        a.setCustomerName(trim(req.customerName()));
-        a.setCustomerPhone(trim(req.customerPhone()));
         a.setStartTime(start);
         a.setEndTime(end);
+        a.setDurationMin(minutes);             // НЕ ЗАБЫТЬ: в БД NOT NULL
         a.setStatus("booked");
-        a.setComment(trim(req.comment()));
+        a.setCustomerName(req.customerName());
+        a.setCustomerPhone(req.customerPhone());
+        a.setComment(req.comment());
 
-        Long id = apptRepo.save(a).getId();
-        return new AppointmentResponse(id, a.getStatus());
-    }
+        repo.save(a);
 
-    private static LocalDateTime parseStart(String iso) {
-        if (iso == null || iso.isBlank()) throw new IllegalArgumentException("startLocal is required");
-        try { return LocalDateTime.parse(iso); }
-        catch (Exception e) { throw new IllegalArgumentException("Неверный формат startLocal: " + iso); }
+        return new AppointmentResponse(
+                a.getId(),
+                a.getServiceId(),
+                a.getServiceDurationId(),
+                a.getStartTime(),
+                a.getEndTime(),
+                a.getStatus(),
+                a.getCustomerName(),
+                a.getCustomerPhone(),
+                a.getComment()
+        );
     }
-    private static String trim(String s){ return s==null? null : s.trim(); }
 }
 
 
