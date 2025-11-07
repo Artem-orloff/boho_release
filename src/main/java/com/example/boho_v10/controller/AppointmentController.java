@@ -1,4 +1,3 @@
-// AppointmentController.java (админский, если он про списки)
 package com.example.boho_v10.controller;
 
 import com.example.boho_v10.dto.AppointmentAdminDto;

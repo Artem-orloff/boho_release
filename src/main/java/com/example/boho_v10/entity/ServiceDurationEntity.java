@@ -10,7 +10,7 @@ public class ServiceDurationEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
-    private ServiceEntity service;                  // <-- имя поля: service
+    private ServiceEntity service;
 
     @Column(name = "duration_min", nullable = false)
     private Integer durationMin;
@@ -27,13 +27,11 @@ public class ServiceDurationEntity {
     @Column(name = "created_at", insertable = false, updatable = false)
     private java.sql.Timestamp createdAt;
 
-    // getters/setters
     public Long getId() { return id; }
 
     public ServiceEntity getService() { return service; }
     public void setService(ServiceEntity service) { this.service = service; } // <-- Была опечатка
 
-    // удобный «шорткат», чтобы не переписывать везде:
     public Long getServiceId() { return service != null ? service.getId() : null; }
 
     public Integer getDurationMin() { return durationMin; }

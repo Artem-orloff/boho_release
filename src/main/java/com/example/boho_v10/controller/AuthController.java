@@ -38,7 +38,6 @@ public class AuthController {
 
     private String stripBearer(String header) {
         if (header == null) return null;
-        // допускаем как "TOKEN", так и "Bearer TOKEN"
         if (header.startsWith("Bearer ")) return header.substring(7);
         return header;
     }

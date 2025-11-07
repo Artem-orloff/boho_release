@@ -2,7 +2,6 @@ package com.example.boho_v10.entity;
 
 import jakarta.persistence.*;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,9 +40,17 @@ public class AppointmentEntity {
     private Integer durationMin;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private java.sql.Timestamp createdAt;
+    private LocalDateTime createdAt;
 
-    // --- getters/setters ---
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id", insertable = false, updatable = false)
+    private ServiceEntity service;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_duration_id", insertable = false, updatable = false)
+    private ServiceDurationEntity serviceDuration;
+
 
     public Long getServiceDurationId(){ return serviceDurationId;}
 
@@ -78,9 +85,14 @@ public class AppointmentEntity {
     public Integer getDurationMin() { return durationMin; }
     public void setDurationMin(Integer durationMin) { this.durationMin = durationMin; }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public ServiceEntity getService() {
+        return service;
+    }
+
+    public ServiceDurationEntity getServiceDuration() {
+        return serviceDuration;
+    }
 }
-
-
-

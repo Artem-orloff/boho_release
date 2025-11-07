@@ -15,7 +15,6 @@ public class ServiceController {
 
     private final ServiceService serviceService;
 
-    // явный конструктор без Lombok
     public ServiceController(ServiceService serviceService) {
         this.serviceService = serviceService;
     }
@@ -34,7 +33,6 @@ public class ServiceController {
         return serviceService.getDurations(id);
     }
 
-    // временный алиас на старый путь, если ещё где-то используется
     @GetMapping(value="/services-durations", produces="application/json")
     public List<ServiceDurationDto> durationsAlias(@RequestParam("serviceId") Long id) {
         return serviceService.getDurations(id);

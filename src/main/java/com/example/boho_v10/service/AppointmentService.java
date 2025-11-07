@@ -47,7 +47,7 @@ public class AppointmentService {
         a.setServiceDurationId(req.serviceDurationId());
         a.setStartTime(start);
         a.setEndTime(end);
-        a.setDurationMin(minutes);             // НЕ ЗАБЫТЬ: в БД NOT NULL
+        a.setDurationMin(minutes);
         a.setStatus("booked");
         a.setCustomerName(req.customerName());
         a.setCustomerPhone(req.customerPhone());

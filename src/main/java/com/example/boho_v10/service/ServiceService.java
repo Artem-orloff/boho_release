@@ -16,13 +16,11 @@ public class ServiceService {
     private final ServiceRepository serviceRepo;
     private final ServiceDurationRepository durationRepo;
 
-    // ЯВНЫЙ конструктор без Lombok
     public ServiceService(ServiceRepository serviceRepo, ServiceDurationRepository durationRepo) {
         this.serviceRepo = serviceRepo;
         this.durationRepo = durationRepo;
     }
 
-    // --- услуги ---
     public List<ServiceDto> getActiveServices() {
         return serviceRepo.findAllByActiveTrueOrderByNameAsc()
                 .stream()
@@ -40,12 +38,11 @@ public class ServiceService {
         return new ServiceDto(
                 e.getId(),
                 e.getName(),
-                e.getDescription(),
+                null,
                 e.getActive()
         );
     }
 
-    // --- длительности ---
     public List<ServiceDurationDto> getDurations(long serviceId) {
         if (!serviceRepo.existsById(serviceId)) {
             throw new IllegalArgumentException("Service not found: " + serviceId);

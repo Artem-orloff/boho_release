@@ -15,10 +15,8 @@ public class TokenService {
         Session(String username, Instant expiresAt) { this.username = username; this.expiresAt = expiresAt; }
     }
 
-    // токен -> сессия
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
 
-    // срок жизни токена (минуты)
     private static final long TTL_MIN = 8 * 60; // 8 часов
 
     public String issueToken(String username) {

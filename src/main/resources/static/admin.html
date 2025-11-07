@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Админ — записи</title>
 
-  <!-- Базовый адрес API (если фронт и бэк на одном хосте — можно оставить пустым '') -->
     <script>
         (function () {
           const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
@@ -14,7 +13,6 @@
         })();
     </script>
 
-  <!-- Хелперы авторизации: подстановка токена, редирект при его отсутствии -->
     <script>
         (function () {
           const token = localStorage.getItem('boho_token');
@@ -99,17 +97,40 @@
     const statusEl = document.getElementById('status');
     const reloadBtn = document.getElementById('reload');
 
-    function utcToLocal(iso){
-      if (!iso) return '';
-      const d = new Date(iso);
-      if (isNaN(d)) return iso;
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mi = String(d.getMinutes()).padStart(2,'0');
-      return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+function utcToLocal(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return 'Ошибка даты';
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+  } catch (e) {
+    return 'Ошибка';
+  }
+}
+
+let servicesMap = {};
+
+async function loadServices() {
+  try {
+    const res = await bohoAuthFetch('/api/services');
+    if (res.ok) {
+      const list = await res.json();
+      servicesMap = Object.fromEntries(
+        list.map(s => [s.id, s.name])
+      );
     }
+  } catch (e) {
+    console.error('Не удалось загрузить услуги:', e);
+  }
+}
+
+// В конце скрипта, после всех функций:
+
 
     async function load(){
       rows.innerHTML = `<tr><td colspan="8" class="muted">Загрузка…</td></tr>`;
@@ -137,9 +158,9 @@
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td><span class="mono">#${a.id}</span></td>
-            <td><span class="badge">${a.serviceName ?? ''}</span><div class="mono">svc:${a.serviceId ?? ''}</div></td>
-            <td>${utcToLocal(a.startAt)}</td>
-            <td>${utcToLocal(a.endAt)}</td>
+            <td><span class="badge">${a.serviceName ?? '—'}</span><div class="mono">svc:${a.serviceId ?? ''}</div></td>
+            <td>${utcToLocal(a.startTime)}</td>
+            <td>${utcToLocal(a.endTime)}</td>
             <td>${a.customerName ?? ''}</td>
             <td>${a.customerPhone ?? ''}</td>
             <td>${a.comment ?? ''}</td>
@@ -179,6 +200,7 @@
     reloadBtn.addEventListener('click', load);
     load();
   })();
+load();
 </script>
 </body>
 </html>

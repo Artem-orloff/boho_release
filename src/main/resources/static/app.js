@@ -1,15 +1,12 @@
 (function () {
   "use strict";
 
-  /* =================== БАЗОВЫЕ UI-ШТУКИ =================== */
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  // Год в футере
   const yearEl = $('#year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Плавные якоря
   $$('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
       const id = a.getAttribute('href');
@@ -20,7 +17,6 @@
     });
   });
 
-  // Анимации появления
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!prefersReduced && 'IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
@@ -36,7 +32,6 @@
     $$('.reveal').forEach(el => el.classList.add('is-visible'));
   }
 
-  // Бургер
   const toggle = $('.menu-toggle');
   const nav = $('#primary-nav');
   toggle?.addEventListener('click', () => {
@@ -45,7 +40,7 @@
     nav?.classList.toggle('open');
   });
 
-  // Кнопка "вверх"
+
   const toTopBtn = $('.back-to-top');
   const toggleToTop = () => {
     const y = window.scrollY || document.documentElement.scrollTop;
@@ -55,7 +50,6 @@
   window.addEventListener('scroll', toggleToTop, { passive: true });
   toTopBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-  /* =================== МОДАЛКА УСЛУГ (описание) =================== */
   const cardOverlay = $('#card-overlay');
   const serviceModal = $('#service-modal');
   const serviceModalTitle = serviceModal?.querySelector('.service-modal__title');
@@ -109,7 +103,6 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !serviceModal?.hidden) closeServiceModal(); });
 
-  /* =================== ТОСТ =================== */
   let toast = $('.toast');
   if (!toast) {
     toast = document.createElement('div');
@@ -127,7 +120,6 @@
     }, 2000);
   }
 
-  /* =================== БРОНЬ: модалка и логика =================== */
   const API_BASE = (window.BOHO_API_BASE || '').replace(/\/+$/, '');
   function sameOrigin(u) { try { const x = new URL(u, location.href); return x.origin === location.origin; } catch { return true; } }
 
@@ -165,23 +157,51 @@
   function uuid() {
     return (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2)));
   }
+    const bookingModal = $('#booking-modal');
+    const form = $('#bookingForm');
+    const titleEl = bookingModal?.querySelector('.booking-modal__title');
 
-  // Элементы формы
-  const bookingModal = $('#booking-modal');
-  const form = $('#bookingForm');
-  const titleEl = bookingModal?.querySelector('.booking-modal__title');
+    const hid = $('#bookingServiceId');
+    const nameI = $('#bookingName');
+    const phoneI = $('#bookingPhone');
+    const durSel = $('#bookingDuration');
+    const dateI = $('#bookingDate');
+    const commI = $('#bookingComment');
+    const cancelBtn = $('#bookingCancel');
+    const submitBtn = $('#submitBooking');
 
-  const hid = $('#bookingServiceId');
-  const nameI = $('#bookingName');
-  const phoneI = $('#bookingPhone');
-  const durSel = $('#bookingDuration');
-  const dateI = $('#bookingDate');
-  const timeSel = $('#bookingTime');
-  const commI = $('#bookingComment');
-  const cancelBtn = $('#bookingCancel');
-  const submitBtn = $('#submitBooking');
+    const timeDropdown = $('#timeDropdown');
+    const timeCurrent = timeDropdown?.querySelector('.custom-dropdown-current');
+    const timeList    = $('#timeList');
+    const timeHidden  = $('#bookingTime'); // скрытый <select>
 
-  // Сетка времени 10:00..22:00 шаг 15 мин
+    timeCurrent?.addEventListener('click', () => {
+      if (!timeDropdown) return;
+      const expanded = timeCurrent.getAttribute('aria-expanded') === 'true';
+      timeCurrent.setAttribute('aria-expanded', String(!expanded));
+      timeList?.classList.toggle('open', !expanded);
+    });
+
+    timeList?.addEventListener('click', (e) => {
+      const item = e.target.closest('.custom-dropdown-option');
+      if (!item || item.hasAttribute('disabled')) return;
+
+      const value = item.dataset.value;
+      timeCurrent.textContent = value;
+      timeHidden.value = value;
+
+      timeCurrent.setAttribute('aria-expanded', 'false');
+      timeList.classList.remove('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (timeDropdown && !timeDropdown.contains(e.target)) {
+        timeCurrent?.setAttribute('aria-expanded', 'false');
+        timeList?.classList.remove('open');
+      }
+    });
+
+
   const GRID = (() => {
     const out = [], d = new Date(), e = new Date();
     d.setHours(10, 0, 0, 0); e.setHours(22, 0, 0, 0);
@@ -189,11 +209,15 @@
     return out;
   })();
 
-  function overlaps(aStart, aEnd, bStart, bEnd) {
-    return new Date(aStart) < new Date(bEnd) && new Date(bStart) < new Date(aEnd);
-  }
+    function overlaps(aStart, aEnd, bStart, bEnd) {
+      const startA = new Date(aStart);
+      const endA = new Date(aEnd);
+      const startB = new Date(bStart);
+      const endB = new Date(bEnd);
 
-  // Блокировка скролла и фокус-трап для формы
+      return !(endA <= startB || endB <= startA);
+    }
+
   let lock2 = false, scrollY2 = 0, prevFocus = null;
   function lockScroll() {
     if (lock2) return;
@@ -221,7 +245,6 @@
     else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
   }
 
-  // Маска телефона +7 (9xx) xxx-xx-xx
   const RU = /^\+7\s?\(9\d{2}\)\s?\d{3}-\d{2}-\d{2}$/;
   function digits(s) { return (s || '').replace(/\D/g, ''); }
   function fmtPhone(raw) {
@@ -244,7 +267,6 @@
   phoneI?.addEventListener('blur', () => setErr(phoneI, RU.test(phoneI.value.trim()) ? '' : 'Формат: +7 (9xx) xxx-xx-xx'));
   if (phoneI && !phoneI.value) phoneI.value = '+7 (9';
 
-  // Ошибки/валидация
   function setErr(el, msg) {
     if (!form || !el) return;
     const box = form.querySelector(`.error[data-for="${el.name}"]`);
@@ -253,16 +275,15 @@
   }
   function valid() {
     let ok = true;
-    setErr(nameI, ''); setErr(phoneI, ''); setErr(durSel, ''); setErr(dateI, ''); setErr(timeSel, '');
+    setErr(nameI, ''); setErr(phoneI, ''); setErr(durSel, ''); setErr(dateI, ''); setErr(timeHidden, '');
     if (!nameI?.value.trim()) { setErr(nameI, 'Укажите имя'); ok = false; }
     if (!RU.test(phoneI?.value.trim() || '')) { setErr(phoneI, 'Формат: +7 (9xx) xxx-xx-xx'); ok = false; }
     if (!durSel?.value) { setErr(durSel, 'Выберите длительность'); ok = false; }
     if (!dateI?.value) { setErr(dateI, 'Выберите дату'); ok = false; }
-    if (!timeSel?.value) { setErr(timeSel, 'Выберите время'); ok = false; }
+    if (!timeHidden?.value) { setErr(timeHidden, 'Выберите время'); ok = false; }
     return ok;
   }
 
-  // Загрузка длительностей — ВАЖНО: корректный URL
   async function loadDurations(serviceId) {
     if (!durSel) return;
     durSel.innerHTML = '<option value="" selected>Загрузка…</option>';
@@ -279,7 +300,7 @@
     }
     data.forEach(d => {
       const label = d.priceCents != null
-        ? `${d.durationMin} мин — ${(d.priceCents / 100).toFixed(0)} ₽`
+        ? `${d.durationMin} мин — ${(d.priceCents).toFixed(0)} ₽`
         : `${d.durationMin} мин`;
       const opt = new Option(label, String(d.id));
       opt.dataset.durationMin = d.durationMin;
@@ -287,15 +308,21 @@
     });
   }
 
-  // Отрисовка времени (учёт занятости + прошлого времени)
-  // Отрисовка времени (учёт занятости + прошлого времени)
-  async function renderTimes(serviceId) {
-    if (!timeSel || !dateI || !durSel) return;
-    timeSel.innerHTML = '';
-    if (!dateI.value || !durSel.value) return;
+async function renderTimes(serviceId) {
+  if (!timeList || !timeCurrent || !timeHidden || !dateI) return;
 
-    // 1) тянем занятость и нормализуем названия полей
-    const rawBusy = await apiGET(`${API_BASE}/api/slots/busy?serviceId=${serviceId}&date=${dateI.value}`) || [];
+  timeList.innerHTML = '';
+  timeHidden.innerHTML = '';
+
+  if (!dateI.value) {
+    timeCurrent.textContent = 'Выберите дату';
+    timeCurrent.setAttribute('aria-expanded', 'false');
+    timeList.classList.remove('open');
+    return;
+  }
+
+  try {
+    const rawBusy = await apiGET(`${API_BASE}/api/slots/busy?date=${dateI.value}`) || [];
     const busy = rawBusy
       .map(b => ({
         start: b.start ?? b.startTime ?? b.begin ?? b.from ?? null,
@@ -303,48 +330,66 @@
       }))
       .filter(b => b.start && b.end);
 
-    // 2) лог на всякий случай (один раз на дату)
-    console.debug('[busy]', dateI.value, busy.slice(0, 5));
+    const minutes = Number(durSel?.options[durSel.selectedIndex]?.dataset.durationMin) || 60;
 
-    // 3) длительность из выбранной опции
-    const minutes = Number(durSel.selectedOptions[0]?.dataset?.durationMin || 60);
-
-    // 4) сегодняшнее прошлое время — недоступно
     const now = new Date();
-    const isToday = dateI.value === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const isToday = dateI.value === todayStr;
 
-    // 5) строим сетку
-    const disabled = new Set();
+    const freeSlots = [];
     GRID.forEach(t => {
-      const start = new Date(`${dateI.value}T${t}:00`);
-      const end = new Date(start); end.setMinutes(end.getMinutes() + minutes);
+      const [hour, minute] = t.split(':').map(Number);
+      const start = new Date(`${dateI.value}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`);
+      const end = new Date(start);
+      end.setMinutes(end.getMinutes() + minutes);
 
-      const past = isToday && end.getTime() <= now.getTime();
-      const conflict = busy.some(b => overlaps(start, end, b.start, b.end));
+      const past = isToday && end <= now;
 
-      const opt = new Option(
-        t + (conflict ? ' — занято' : (past ? ' — прошло' : '')),
-        t,
-        false,
-        false
-      );
-      if (conflict || past) {
-        opt.disabled = true;
-        disabled.add(t);
-      }
-      timeSel.appendChild(opt);
+      const conflict = busy.some(b => {
+        const busyStart = new Date(b.start);
+        const busyEnd = new Date(b.end);
+        return start < busyEnd && busyStart < end;
+      });
+
+      const isFree = !past && !conflict;
+
+      const li = document.createElement('li');
+      li.className = 'custom-dropdown-option';
+      li.dataset.value = t;
+      li.textContent = t;
+      if (!isFree) li.setAttribute('disabled', 'true');
+      timeList.appendChild(li);
+
+      const opt = new Option(t, t);
+      if (!isFree) opt.disabled = true;
+      timeHidden.appendChild(opt);
+
+      if (isFree) freeSlots.push(t);
     });
 
-    const firstFree = GRID.find(x => !disabled.has(x));
-    timeSel.value = firstFree || '';
-    if (!firstFree) showToast('Свободных слотов на выбранную дату нет');
+    timeCurrent.textContent = 'Выберите время';
+    timeHidden.value = '';
+    timeCurrent.setAttribute('aria-expanded', 'false');
+    timeList.classList.remove('open');
+
+    if (freeSlots.length > 0) {
+      const first = freeSlots[0];
+      timeHidden.value = first;
+      timeCurrent.textContent = first;
+    } else {
+      showToast('Свободных слотов на эту дату нет');
+    }
+
+  } catch (err) {
+    console.error('Ошибка при рендеринге времени:', err);
+    timeList.innerHTML = '<li class="custom-dropdown-option" disabled>Ошибка загрузки</li>';
+    timeHidden.innerHTML = '<option value="" disabled>Ошибка</option>';
+    timeCurrent.textContent = 'Ошибка';
   }
+}
 
 
 
-
-
-  // Открытие формы из карточки
   document.body.addEventListener('click', async (e) => {
     const btn = e.target.closest('.service__book-btn');
     if (!btn) return;
@@ -356,15 +401,13 @@
     if (titleEl) titleEl.textContent = t || 'Запись на услугу';
     if (hid) hid.value = String(serviceId);
 
-    // Мин. дата — сегодня
     const now = new Date(); const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, '0'), d = String(now.getDate()).padStart(2, '0');
     if (dateI) {
       dateI.min = `${y}-${m}-${d}`;
       if (!dateI.value) dateI.value = dateI.min;
     }
 
-    // Показ формы
-    if (serviceModal) serviceModal.hidden = true; // закрываем инфо-модалку
+    if (serviceModal) serviceModal.hidden = true;
     if (cardOverlay) cardOverlay.hidden = false;
     if (bookingModal) bookingModal.hidden = false;
     lockScroll();
@@ -379,7 +422,6 @@
     }
   });
 
-  // Закрытие формы
   function closeBooking() {
     if (bookingModal) bookingModal.hidden = true;
     if (cardOverlay) cardOverlay.hidden = true;
@@ -390,22 +432,19 @@
   cardOverlay?.addEventListener('click', () => { if (!bookingModal?.hidden) closeBooking(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !bookingModal?.hidden) closeBooking(); });
 
-  // Дебаунс на изменение длительности/даты
   let timr = null;
   function debounce(fn, ms) { return (...a) => { clearTimeout(timr); timr = setTimeout(() => fn(...a), ms); }; }
   const rerenderDebounced = debounce(async (sid) => { if (sid) await renderTimes(sid); }, 120);
   durSel?.addEventListener('change', () => rerenderDebounced(Number(hid?.value || 0)));
   dateI?.addEventListener('change', () => rerenderDebounced(Number(hid?.value || 0)));
 
-  // Сабмит формы
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!valid()) return;
 
     const serviceId = Number(hid?.value);
     const serviceDurationId = Number(durSel?.value);
-    const startLocal = `${dateI?.value}T${timeSel?.value}`;
-
+    const startLocal = `${dateI?.value}T${timeHidden?.value}`;
     submitBtn?.classList.add('loading');
     if (submitBtn) submitBtn.disabled = true;
 
@@ -441,11 +480,9 @@
     }
   });
 
-  /* =================== ДИАГНОСТИКА: подсказка в консоль =================== */
   try {
     console.log('BOHO_API_BASE =', window.BOHO_API_BASE);
-  } catch { /* noop */ }
+  } catch {}
 })();
-
 
 

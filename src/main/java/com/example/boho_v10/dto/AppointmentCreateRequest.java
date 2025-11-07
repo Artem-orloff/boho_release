@@ -2,7 +2,7 @@ package com.example.boho_v10.dto;
 
 public record AppointmentCreateRequest
     (Long serviceId,
-     Long serviceDurationId,   // id строки из service_durations
+     Long serviceDurationId,
      String startLocal,
      String customerName,
      String customerPhone,
